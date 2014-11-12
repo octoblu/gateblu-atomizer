@@ -1,0 +1,25 @@
+{
+  "name": "gateblu-atomizer",
+  "version": "1.0.0",
+  "description": "Atomic gateblu updates",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/octoblu/gateblu-atomizer.git"
+  },
+  "keywords": [
+    "gateblu",
+    "meshblu",
+    "octoblu",
+    "blu"
+  ],
+  "author": "Octoblu Inc",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/octoblu/gateblu-atomizer/issues"
+  },
+  "homepage": "https://github.com/octoblu/gateblu-atomizer"
+}
