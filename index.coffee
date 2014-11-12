@@ -2,6 +2,7 @@ _       = require 'lodash'
 meshblu = require 'meshblu'
 request = require 'request'
 url     = require 'url'
+debug   = require('debug')('gateblu-atomizer')
 {EventEmitter} = require 'events'
 
 class GatebluAtomizer extends EventEmitter
@@ -13,15 +14,18 @@ class GatebluAtomizer extends EventEmitter
     @processFunctions =
       'add-device': @addDevice
       'remove-device': @removeDevice
+      'nodered-instance-start': @addDevice
+      'nodered-instance-stop': @removeDevice
 
   run: =>
-    @connection = meshblu.createConnection @meshbluOptions
+    @connection = meshblu.createConnection _.cloneDeep(@meshbluOptions)
     @connection.on 'message', @onMessage
     @connection.on 'notReady', @onNotReady
     @connection.on 'ready', @onReady
     @processQueue()
 
   onMessage: (message) =>
+    debug 'onMessage', message.topic
     @queue.push message
 
   onNotReady: (data) =>
@@ -31,6 +35,7 @@ class GatebluAtomizer extends EventEmitter
     @emit 'ready'
 
   processQueue: =>
+    debug 'processQueue'
     return _.delay(@processQueue, 500) if _.isEmpty @queue
 
     message = @queue.pop()
@@ -44,41 +49,67 @@ class GatebluAtomizer extends EventEmitter
       return
 
     gatebluUpdateFunction message.payload, (error) =>
+      debug 'gatebluUpdateFunction complete', error
       if error?
         console.error 'error updating gateblu', error
         @connection.message devices: message.fromUuid, topic: 'atomizer-error', error: error, originalMessage: message
+      else
+        @connection.message devices: @target.uuid, topic: 'refresh'
 
       @processQueue()
 
   addDevice: (device, callback=->) =>
+    debug 'addDevice', device.uuid, device.token
     @getGateblu (error, gateblu) =>
+      debug 'gotGateblu', error, gateblu
       return callback(error) if error?
 
-      gateblu.devices.push device
+      gateblu.devices ?= []
+      gateblu.devices.push {uuid: device.uuid, token: device.token, connector: 'flow-runner'}
       @saveGateblu gateblu, callback
 
-  removeDevice: (uuid, callback=->) =>
+  removeDevice: (device, callback=->) =>
+    debug 'removeDevice', device
     @getGateblu (error, gateblu) =>
-      gateblu.devices = _.reject gateblu.devices, uuid: uuid
+      gateblu.devices = _.reject gateblu.devices, uuid: device.uuid
       @saveGateblu gateblu, callback
 
-  getGateblu: (gateblu, callback=->) =>
-    protocol = if @meshbluOptions.port == 443 then 'https' else 'http'
-    uri = url.format protocol: protocol, hostname: @meshbluOptions.server, port: @meshbluOptions.port, pathname: "/devices/#{@target.uuid}"
-    options = {
+  getGateblu: (callback=->) =>
+    options = @getGatebluRequestOptions()
+    options.method = 'GET'
+
+    request options, (error, response, body) =>
+      gateblu = _.omit _.first(body.devices), '_id'
+      _.defer callback, error, gateblu
+
+  saveGateblu: (gateblu, callback=->) =>
+
+    options = @getGatebluRequestOptions()
+    options.method = 'PUT'
+    options.json   = gateblu
+
+    debug 'saveGateblu', options
+    request options, (error, response, body) =>
+      debug 'put complete', error, response.statusCode, body
+      callback error, body
+    # @connection.update gateblu, (data) =>
+    #   debug '@connection.update', data.error
+    #   return callback(data) if data.error?
+    #   callback()
+
+  getGatebluRequestOptions: =>
+    {
       json: true
       headers:
         skynet_auth_uuid:  @target.uuid
         skynet_auth_token: @target.token
+      uri: url.format(
+        protocol: if @meshbluOptions.port == 443 then 'https' else 'http'
+        hostname: @meshbluOptions.server
+        port:     @meshbluOptions.port
+        pathname: "/devices/#{@target.uuid}"
+      )
     }
-
-    request.get uri, options, (error, response, body) =>
-      _.defer callback, error, body
-
-  saveGateblu: (gateblu, callback=->) =>
-    @connection.update gateblu, (data) =>
-      return callback(data) if data.eventCode != 401
-      callback()
 
 
 

@@ -1,5 +1,5 @@
 {
-  "server": "127.0.0.1",
+  "server": "localhost",
   "port":   "3000",
   "token":  "yu3fr99fc6f4unmiiw07z40i584fs9k9",
   "uuid":   "86376220-6a97-11e4-ae0f-25c08d55f0c4",

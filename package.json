@@ -25,6 +25,7 @@
   "homepage": "https://github.com/octoblu/gateblu-atomizer",
   "dependencies": {
     "coffee-script": "^1.8.0",
+    "debug": "^2.1.0",
     "lodash": "^2.4.1",
     "meshblu": "^1.7.0",
     "request": "^2.48.0"
