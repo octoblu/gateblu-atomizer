@@ -27,6 +27,7 @@ class GatebluAtomizer extends EventEmitter
   onMessage: (message) =>
     debug 'onMessage', message.topic
     @queue.push message
+    @processQueue()
 
   onNotReady: (data) =>
     console.error "Failed to authenticate", data
@@ -36,7 +37,9 @@ class GatebluAtomizer extends EventEmitter
 
   processQueue: =>
     debug 'processQueue'
-    return _.delay(@processQueue, 500) if _.isEmpty @queue
+    return if @processingQueue || !@queue.length
+
+    @processingQueue = true
 
     message = @queue.pop()
 
@@ -45,6 +48,7 @@ class GatebluAtomizer extends EventEmitter
     unless gatebluUpdateFunction?
       console.error('unknown message topic', message)
       @connection.message devices: message.fromUuid, topic: 'atomizer-error', error: 'unknown message topic', originalMessage: message
+      @processingQueue = false
       _.defer @processQueue
       return
 
@@ -56,10 +60,11 @@ class GatebluAtomizer extends EventEmitter
       else
         @connection.message devices: @target.uuid, topic: 'refresh'
 
-      @processQueue()
+      @processingQueue = false
+      _.defer @processQueue
 
   addDevice: (device, callback=->) =>
-    debug 'addDevice', device.uuid, device.token
+    debug 'addDevice', device.uuid
     @getGateblu (error, gateblu) =>
       debug 'gotGateblu', error, gateblu
       return callback(error) if error?
@@ -73,7 +78,8 @@ class GatebluAtomizer extends EventEmitter
 
   restartDevice: (device, callback=->) =>
     debug 'restartDevice', device.uuid, device.token
-    @connection.message devices: @target.uuid, topic: 'refresh-device', deviceUuid: device.uuid, callback
+    @connection.message devices: @target.uuid, topic: 'refresh-device', deviceUuid: device.uuid
+    callback()
 
   removeDevice: (device, callback=->) =>
     debug 'removeDevice', device
