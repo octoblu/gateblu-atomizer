@@ -64,9 +64,16 @@ class GatebluAtomizer extends EventEmitter
       debug 'gotGateblu', error, gateblu
       return callback(error) if error?
 
+      return @restartDevice(device, callback) if _.findWhere(gateblu.devices, uuid: device.uuid)
+
       gateblu.devices ?= []
+
       gateblu.devices.push {uuid: device.uuid, token: device.token, connector: 'flow-runner'}
       @saveGateblu gateblu, callback
+
+  restartDevice: (device, callback=->) =>
+    debug 'restartDevice', device.uuid, device.token
+    @connection.message devices: @target.uuid, topic: 'refresh-device', deviceUuid: device.uuid, callback
 
   removeDevice: (device, callback=->) =>
     debug 'removeDevice', device
@@ -101,8 +108,8 @@ class GatebluAtomizer extends EventEmitter
     {
       json: true
       headers:
-        skynet_auth_uuid:  @target.uuid
-        skynet_auth_token: @target.token
+        meshblu_auth_uuid:  @target.uuid
+        meshblu_auth_token: @target.token
       uri: url.format(
         protocol: if @meshbluOptions.port == 443 then 'https' else 'http'
         hostname: @meshbluOptions.server
@@ -110,7 +117,5 @@ class GatebluAtomizer extends EventEmitter
         pathname: "/devices/#{@target.uuid}"
       )
     }
-
-
 
 module.exports = GatebluAtomizer
