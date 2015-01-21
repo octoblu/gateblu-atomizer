@@ -101,7 +101,7 @@ class GatebluAtomizer extends EventEmitter
     options.method = 'PUT'
     options.json   = gateblu
 
-    debug 'saveGateblu', options
+    debug 'saveGateblu', JSON.stringify(options)
     request options, (error, response, body) =>
       debug 'put complete', error, response.statusCode, body
       callback error, body
