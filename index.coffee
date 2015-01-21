@@ -71,7 +71,11 @@ class GatebluAtomizer extends EventEmitter
 
       return @restartDevice(device, callback) if _.findWhere(gateblu.devices, uuid: device.uuid)
 
+      gateblu.devices = null if _.isEmpty(gateblu.devices)
+      
       gateblu.devices ?= []
+
+      debug 'devices', gateblu.devices
 
       gateblu.devices.push {uuid: device.uuid, token: device.token, connector: 'flow-runner'}
       @saveGateblu gateblu, callback
