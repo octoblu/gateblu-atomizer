@@ -27,7 +27,7 @@
     "coffee-script": "^1.8.0",
     "debug": "^2.1.0",
     "lodash": "^2.4.1",
-    "meshblu": "^1.9.0",
+    "meshblu": "^1.12.0",
     "request": "^2.48.0"
   }
 }
