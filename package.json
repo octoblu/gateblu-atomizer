@@ -1,6 +1,6 @@
 {
   "name": "gateblu-atomizer",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Atomic gateblu updates",
   "main": "index.js",
   "scripts": {

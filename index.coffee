@@ -69,21 +69,16 @@ class GatebluAtomizer extends EventEmitter
       debug 'gotGateblu', error, gateblu
       return callback(error) if error?
 
-      return @restartDevice(device, callback) if _.findWhere(gateblu.devices, uuid: device.uuid)
-
       gateblu.devices = null if _.isEmpty(gateblu.devices)
-      
+
       gateblu.devices ?= []
+
+      gateblu.devices = _.reject(gateblu.devices, uuid: device.uuid)
 
       debug 'devices', gateblu.devices
 
       gateblu.devices.push {uuid: device.uuid, token: device.token, connector: 'flow-runner'}
       @saveGateblu gateblu, callback
-
-  restartDevice: (device, callback=->) =>
-    debug 'restartDevice', device.uuid, device.token
-    @connection.message devices: @target.uuid, topic: 'refresh-device', deviceUuid: device.uuid
-    callback()
 
   removeDevice: (device, callback=->) =>
     debug 'removeDevice', device
