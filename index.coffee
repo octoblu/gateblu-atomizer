@@ -16,6 +16,8 @@ class GatebluAtomizer extends EventEmitter
       'remove-device': @removeDevice
       'nodered-instance-start': @addDevice
       'nodered-instance-stop': @removeDevice
+      'create': @addDevice
+      'delete': @removeDevice
 
   run: =>
     @connection = meshblu.createConnection _.cloneDeep(@meshbluOptions)
