@@ -59,8 +59,6 @@ class GatebluAtomizer extends EventEmitter
       if error?
         console.error 'error updating gateblu', error
         @connection.message devices: message.fromUuid, topic: 'atomizer-error', error: error, originalMessage: message
-      else
-        @connection.message devices: @target.uuid, topic: 'refresh'
 
       @processingQueue = false
       _.defer @processQueue
