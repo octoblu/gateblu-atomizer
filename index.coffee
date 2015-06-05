@@ -65,20 +65,21 @@ class GatebluAtomizer extends EventEmitter
 
   addDevice: (device, callback=->) =>
     debug 'addDevice', device.uuid
-    @getGateblu (error, gateblu) =>
-      debug 'gotGateblu', error, gateblu
-      return callback(error) if error?
+    @removeDevice device, (error, body) =>
+      @getGateblu (error, gateblu) =>
+        debug 'gotGateblu', error, gateblu
+        return callback(error) if error?
 
-      gateblu.devices = null if _.isEmpty(gateblu.devices)
+        gateblu.devices = null if _.isEmpty(gateblu.devices)
 
-      gateblu.devices ?= []
+        gateblu.devices ?= []
 
-      gateblu.devices = _.reject(gateblu.devices, uuid: device.uuid)
+        gateblu.devices = _.reject(gateblu.devices, uuid: device.uuid)
 
-      debug 'devices', gateblu.devices
+        debug 'devices', gateblu.devices
 
-      gateblu.devices.push {uuid: device.uuid, token: device.token, connector: 'flow-runner'}
-      @saveGateblu gateblu, callback
+        gateblu.devices.push {uuid: device.uuid, token: device.token, connector: 'flow-runner'}
+        @saveGateblu gateblu, callback
 
   removeDevice: (device, callback=->) =>
     debug 'removeDevice', device
